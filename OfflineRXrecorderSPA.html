@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Offline Rx Recorder</title>
+	<script>
+		
+		var patientObj = {};
+		var patientList = [];
+
+		function printIt() {
+			var listOut = "<h4>Spectacle Ordering Sheet</h4>";
+			listOut += "<button class=\"retButt\" onclick=\"viewReset();\">Return</button>";
+			var theList = document.getElementById("printList");
+			theList.style.display = "block";
+			document.getElementById("maincontent").style.display = "none";
+			document.body.style.background = "url(\"\")";
+			document.getElementById("control-list").style.display = "none";
+			var x = patientList.length;
+			for (i = 0; i < x; i++) {
+				listOut += "Patient's Name: " + patientList[i].firstname + " ";
+				listOut += patientList[i].lastname + "<br />";
+				if (patientList[i].rank != "") {listOut += "Rank: " +patientList[i].rank + "<br />";}
+
+				listOut += "DoD ID: " + patientList[i].dod + "<br />";
+				listOut += "SSN: " + patientList[i].ssn + "<br />";
+				listOut += "Contact Number: " + patientList[i].maincontact + "<br />";
+				listOut += "Work Number: " + patientList[i].workcontact + "<br />";
+				listOut += "Unit: " + patientList[i].unit + "<br />";
+				listOut += "Email: " + patientList[i].email + "<br />";
+				listOut += "Rx OD: " + patientList[i].rxod + "<br />";
+				listOut += "Rx OS: " + patientList[i].rxos + "<br />";
+				listOut += "PD: " + patientList[i].pd + "<br />";
+				if (patientList[i].seg != "") {listOut += "Seg: " + patientList[i].seg + "<br />";}
+				if (patientList[i].addp != "") {listOut += "Add: " + patientList[i].addp + "<br />";}
+				listOut += "Service Glasses: " + patientList[i].sg + "<br />";
+				if (patientList[i].foc !="") {listOut += "Frame of Choice: " + patientList[i].foc + "<br />";}
+				if (patientList[i].gas != null) {listOut += patientList[i].gas;}
+				if (patientList[i].uplc != null) {listOut += " " + patientList[i].uplc;}
+				if (patientList[i].gas != null || patientList[i].uplc != null) {listOut += "<br />";}
+
+				if (patientList[i].comments != null) {listOut += "Comments: " + patientList[i].comments;}
+
+				listOut += "<hr />";
+			}
+			theList.innerHTML = listOut;
+			document.getElementById("printList").addEventListener("keypress",window.print());
+			
+		}
+
+		function viewReset() {
+			document.getElementById("printList").style.display = "none";
+			document.getElementById("maincontent").style.display = "inline-block";
+			document.getElementById("control-list").style.display = "inline-block";
+			document.body.style.background = "url(\"glassCrop.png\")";
+		}
+			
+
+		function process() {
+			var myForm = document.forms["eyeballs"];
+			var fn = myForm["fname"].value;
+			var ln = myForm["lname"].value;
+			var rank = myForm["rank"].value;
+			var outString = "";
+			var err = false;
+			var work = myForm["work"].value;
+			var dod = myForm["dodid"].value;
+			var ss = myForm["ssn"].value;
+			var ph = myForm["phone"].value;
+			var unit = myForm["unit"].value;
+			var eml = myForm["eml"].value;
+			var rxod = myForm["od"].value;
+			var rxos = myForm["os"].value;
+			var pd = myForm["pd"].value;
+			var seg = myForm["seg"].value;
+			var addp = myForm["add"].value;
+			var sgtype = myForm["sgType"].value;
+			var sgbrg = myForm["sgBridge"].value;
+			var sgskl = myForm["sgSkl"].value;
+			var focstyle = myForm["focStyle"].value;
+			var focskl = myForm["focSkl"].value;
+			var foccolor = myForm["focColor"].value;
+			var gas = myForm["m50"].checked;
+			var uplc = myForm["uplc"].checked;
+			var comments = myForm["comments"].value;
+			
+
+			if (dod != "") {
+				if (!(/[0-9]{10}/.test(dod))) {
+					outString += "\nDoD ID must be ten digits.  Please reenter or leave blank.";
+					err = true;
+				}
+			}
+
+			if (!(/[0-9]{3}-?[0-9]{2}-?[0-9]{4}/.test(ss))) {
+				outString += "\nSocial Security Number not valid.  Please reenter.";
+				myForm["ssn"].focus();
+				err = true;
+			}
+
+			if (ph == "") {outString += "\nPhone Number cannot be blank."; err = true;}
+			else if (!(/[(]?[0-9]{3}[)]?[-]?[\s]?[0-9]{3}[-\s]?[0-9]{4}/.test(ph))) {
+				outString +="\nPlease enter a valid phone number."; err = true;
+			}
+
+			if (err) {
+				alert(outString);
+				err = false;
+			} else {
+			huh = document.forms["eyeballs"]["act"].checked; 
+			message = "Patient's Name: " + fn + " " +ln;
+				if (rank !="" || rank != null) {message += "\nRank: " + rank;}
+				message += "\n" + "SSN: " + ss;
+				message += "\n" + "DoD ID: " + dod;
+				message += "\n" + "Contact Number: " + ph;
+				message += "\n" + "Email: " + eml;
+				message += "\n" + "Rx OD: " + rxod + " Rx OS: " + rxos;
+				message += "\n" + "Pupilary Distance: " + pd;
+				message += "\n" + "Segment Length: " + seg;
+				message += "\n" + "Add Power: " + addp;
+				message += "\n" + "SG Type: " + sgtype;
+				message += "-" + sgbrg + " " + sgskl;
+				if (huh) {
+					message += "\n" + "Frame of Choice: ";
+					message += focstyle + " " + focskl + " ";
+					message += foccolor;
+				}
+				if (gas) {message += "\nGas Mask inserts required.";}
+				if (uplc) {message += "\nBallastic inserts required.";}
+				var enterIt = confirm(message + "\nIs this correct?");
+				if (enterIt) {
+					//huh = document.forms["eyeballs"]["act"].checked;
+					var outString = "<li>" + fn + " " + ln + "</li>";
+					document.getElementById("theList").innerHTML += outString;
+					document.forms["eyeballs"].reset();
+					patientObj.firstname = fn;
+					patientObj.lastname = ln;
+				    patientObj.rank = rank;
+					patientObj.ssn = ss;
+					patientObj.maincontact = ph;
+					patientObj.workcontact = work;
+					patientObj.email = eml;
+					patientObj.unit = unit;
+					patientObj.dod = dod;
+					patientObj.pd = pd;
+					patientObj.seg = seg;
+					patientObj.rxod = rxod;
+					patientObj.rxos = rxos;
+					patientObj.addp = addp;
+					patientObj.sg = sgtype + "-" + sgbrg + " " + sgskl + "mm";
+					if (huh) {
+						patientObj.foc = focstyle + " " + foccolor + " " + focskl + "mm";
+					} else {
+						patientObj.foc = "";
+					}
+					if (gas) {patientObj.gas = "Gas mask inserts needed. ";}
+					if (uplc) {patientObj.uplc = "Ballastic inserts needed. ";}
+					if (comments != ""){patientObj.comments = comments;}	
+					patientList.push(patientObj);
+					patientObj = {};
+					
+				}
+			}
+			document.forms["eyeballs"]["foc"].disabled = true;
+		}
+
+		function openFOC() {
+			var focEn = document.getElementById("foc").disabled;
+			var actChecked = document.forms["eyeballs"]["act"].checked;
+			if (actChecked) {
+				document.forms["eyeballs"]["foc"].disabled = false;
+			} else {
+				document.forms["eyeballs"]["foc"].disabled = true;
+			}			
+		}
+
+		function colorSelect() {
+			var sty1 = document.forms["eyeballs"]["focStyle"].value;
+			var sty = sty1.match(/[a-z]+/i)
+			if (sty == "Liberty" || sty == "Muga") {
+				out = "<option value = \"Black\">Black</option>";
+				out += "<option value = \"Gold\">Gold</option>";
+				document.forms["eyeballs"]["focColor"].disabled = false;
+				document.getElementById("col").innerHTML = out;
+			} else if (sty == "Elite") {
+				out = "<option value = \"Black\">Black</option>";
+				out += "<option value = \"Pewter\">Pewter</option>";
+				out += "<option value = \"Brown\">Brown</option>";
+				document.forms["eyeballs"]["focColor"].disabled = false;
+				document.getElementById("col").innerHTML = out;
+			} else {
+				document.forms["eyeballs"]["focColor"].disabled = true;
+				document.getElementById("col").innerHTML = "";
+			}			
+		}
+
+
+		function checkSSN() {
+			var ss = document.forms["eyeballs"]["ssn"].value;
+			if (!(/[0-9]{3}-?[0-9]{2}-?[0-9]{4}/.test(ss))) {
+				document.forms["eyeballs"]["ssn"].style.background = "yellow";
+			} else {
+				document.forms["eyeballs"]["ssn"].style.background = "white";
+			}
+		}
+		
+		function purge() {
+			var huh = confirm("You are sure you wish to delete the current list of patients?");
+			if (huh) {
+				var theList = document.getElementById("theList");
+				theList.innerHTML = "";
+				patientList = [];
+			}
+		}
+	</script>
+	<style>
+			body {background: url("glassCrop.png");}
+			#super {
+					width: 880px; 
+					height:620px;
+					margin: 10px auto 10px;
+					position: relative;
+			}
+
+		#maincontent {
+			display: inline-block;
+			position: absolute;
+			width: 600px;
+			border: 5px outset gold;
+			background-color: black;
+			color: gold;
+			margin-top: 40px;
+			/*margin-right: auto;*/
+			height: 620px;
+			font: 12pt/1.4 "Times New Roman",Times,serif;
+			}
+		#maincontent form {
+			margin-left: 20px;
+		}
+        
+        #maincontent fieldset {
+        	margin-right: 20px;
+        }
+
+		#maincontent input[type=text], input[type=email], input[type=number]{
+			position: absolute;
+			left: 45%;
+			width: 200px;
+			border: 3px solid #222;}
+
+		#maincontent input[type=submit] {
+			position: relative;
+			width: 80px;
+			margin: 0px auto 0px auto;
+			left: 258px;
+		}
+
+	 	#notField {
+			position: absolute;
+			left: 45%;
+		}
+
+		#maincontent h1, h2, h3, h4 {
+			text-align:center;
+			}
+		#maincontent legend {
+			color: gold;
+			margin-right: 10px;
+			}
+		#op {
+			position: absolute;
+			display: inline;
+			left: 45%;
+			}
+
+		#control-list {
+			float: right;
+			position: absolute;
+			width: 250px;
+			border: 5px outset navy; 
+			height: 620px;
+			background-color: black;
+			color: goldenrod;
+			margin-left: 630px;
+			margin-top: 40px;
+			}
+		#control-list ul {
+			list-style-type: none;
+			}
+
+		#control-list h1, h2, h3, h4, h5, h6 {
+			text-align: center;
+		}
+		.retButt {
+				top:10px;
+				right:10px;
+				position:fixed;
+				border: 3px silver outset;
+				background-color:#999;
+				cursor: pointer;
+		}
+		.retButt:hover { background-color:#777; }
+		.retButt:active { border: 3px silver inset;}
+
+		.button, .button:visited {
+			display: inline-block;
+			text-align: center;
+			border: 3px silver outset;
+			background-color: #999;
+			color: black;
+			cursor: pointer;
+			padding: 2px;
+		}
+		.button:hover {
+			background-color: #777;
+		}
+		.button:active {
+			border: 3px silver inset;
+			background-color: #333;
+			color: white;
+		}
+		
+		#printList {
+			position: absolute;
+			left: 0px;
+			top: 0px;
+			padding: 0px;
+			width: 100%;
+			height: 100%;
+			display: none;
+			background-color: white;
+			color: black;
+			font: 12pt/1.2 "Times New Roman",Times,serif;
+		}
+		
+		.field {
+			display: inline;
+			position: relative;
+		}
+			
+			
+	</style>
+</head>
+<body> <div id="super">
+	<div id="maincontent">
+		<h3>Offline Spectacle Rx Recorder</h3>
+
+		<form name="eyeballs" action="javascript:process();">
+
+			<label>First Name:</label><input type="text" name="fname" required><br />
+			Last Name:&nbsp;&nbsp;<input type="text" name="lname" required><br />
+			Rank: <input type="text" name="rank"><br />
+			DoD ID:&nbsp;&nbsp;<input type="text" name="dodid"><br/>
+			SSN:&nbsp;&nbsp;<input type="text" name="ssn" onchange="checkSSN();" required><br />
+			Contact Number:&nbsp;&nbsp;<input type="text" name="phone" required><br />
+			Work Number: <input type="text" name="work"><br />
+			Unit:	<input type="text" name="unit"><br />
+			Email: <input type="email" name="eml"><br />
+			Rx OD: <input type="text" name="od" required><br />
+			Rx OS: <input type="text" name="os" required><br />
+			Pupilary Distance: <input type="number" name="pd" required><br />
+			Segment Length: <input type="text" name="seg"><br />
+			Add Power: <input type="text" name="add"><br />
+			Active Duty &nbsp;&nbsp;<input type="checkbox" name="act" onchange="openFOC();" id="notField"><br />
+			Service Glasses: <div id="op">
+				<select name="sgType">
+					<option value="5AL 50">5AL 50</option>   
+					<option value="5AL 52" selected>5AL 52</option>
+					<option value="5AL 54">5AL 54</option>
+					<option value="5AS 48">5AS 48</option>
+					<option value="5AS 46">5AS 46</option>
+					<option value="5AM 54">5AM 54</option>
+					<option value="5AM 52">5AM 52</option>
+					<option value="5AM 50">5AM 50</option>
+				</select>&nbsp;Bridge:
+				<select name="sgBridge">
+					<option value="16">16</option>
+					<option value="18">18</option>
+					<option value="20" selected>20</option>
+					<option value="22">22</option>
+					<option value="24">24</option>
+				</select>&nbsp;SKL:
+				<select name="sgSkl">
+					<option value="125">125</option>
+					<option value="130">130</option>
+					<option value="135">135</option>
+					<option value="140">140</option>
+					<option value="145">145</option>
+					<option value="150" selected>150</option>
+					<option value="155">155</option>
+					<option value="160">160</option>
+					<option value="165">165</option>
+				</select>
+			</div>
+				<br />
+			<fieldset id="foc" disabled>
+				<legend>Frame of Choice (Active Duty Only):</legend>
+				<!--div id="op"-->
+					Style: <select name="focStyle" style="width: 200px;" onChange="colorSelect();" onFocus="colorSelect();">
+						<option value="Ellsworth 51-18">Ellsworth 51-18</option>
+						<option value="Ellsworth 53-18">Ellsworth 53-18</option>
+						<option value="Keesler 52-15">Keesler 52-15</option>
+						<option value="Keesler 55-15">Keesler 55-15</option>
+						<option value="Keesler 58-15">Keesler 58-15</option>
+						<option value="Kingsville 51-17">Kingsville 51-17</option>
+						<option value="Kingsville 53-19">Kingsville 53-19</option>
+						<option value="Kingsville 55-19">Kingsville 55-19</option>
+						<option value="Liberty 50-18">Liberty 50-18</option>
+						<option value="Liberty 52-20">Liberty 52-20</option>
+						<option value="Liberty 54-20">Liberty 54-20</option>
+						<option value="Muga 50-17">Muga 50-17</option>
+						<option value="Muga 52-19">Muga 52-19</option>
+						<option value="Muga 54-19">Muga 54-19</option>
+						<option value="Willow 50-16">Willow 50-16</option>
+						<option value="Willow 52-18">Willow 52-18</option>
+						<option value="Willow 54-18">Willow 54-18</option>
+						<option value="Covert 53-19">Covert 53-19</option>
+						<option value="Covert 51-19">Covert 51-19</option>
+						<option value="Thunder M. Black 52-17">Thunder M. Black 52-17</option>
+						<option value="Thunder M. Black 54-17">Thunder M. Black 54-17</option>
+						<option value="Osan 53-15">Osan 53-15</option>
+						<option value="Osan 55-15">Osan 55-15</option>
+						<option value="Elite 50-19">Elite 50-19</option>
+						<option value="Elite 52-21">Elite 52-21</option>
+						<option value="none">No Frame of Choice</option>
+						<option value="2nd pair SGs">2nd Pair of SGs</option>
+					</select>
+					SKL: <select name="focSkl">
+						<option value="135">135</option>
+						<option value="140" selected>140</option>
+						<option value="145">145</option>
+						<option value="150">150</option>
+					</select>
+					Color: <select name="focColor" disabled id="col">
+					</select>
+					<br />
+					UPLC: <input type="checkbox" name="uplc" class="field">
+					Gas Mask Inserts: <input type="checkbox" name="m50" class="field" >
+			<!--/div-->
+			</fieldset>
+			<br />
+			<textarea name="comments" rows="2" cols="67" placeholder="Free comment area"></textarea>
+			<br />
+			<br />
+			<input class="button" type="submit" value="Submit">
+		
+		</form>
+	</div>
+	<div id="control-list">
+		<h5>Glasses Required For:</h5>
+		<div id="listBox" style="width: 97%; height: 510px; margin: 0px auto 0px;">
+			<ul id="theList">
+			</ul>
+		</div>
+		<button class="button" style="margin-top: 10px; margin-left: 25%;" onclick="printIt()">Print View</button>&nbsp;
+		<button class="button" onclick="purge();"> Purge </button>
+	</div>
+</div>
+	<div id="printList" ondblclick="viewReset();">
+	</div>
+</body>
+</html>
