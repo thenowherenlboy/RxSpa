@@ -1,1 +1,5 @@
 # RxSpa
+
+This is a very simple, no frills, single page application for recording spectacle prescriptions and formatting them for sequential hard-copy printing. I built this for the Optometry section of Naval Health Clinic Cherry Point during my tenure there. The raison d'etre for this application was to serve as a backup for the DoD's SRTS-Web (Spectacle Request Transmission System, see https://srtsweb.amedd.army.mil) during unplanned and maintenance outages. Traditionally, prescriptions were written by hand to be submitted later. As my handwriting is slightly autrocious, and my typing speed somewhat adequate, I personnally made use of this. 
+
+Prescriptions and patient information are stored locally and temporarily. All imformation is purged immediately once the page is closed. There is also a manual purge function that clears stored information should the user feel the need. (These functions exist to comply with HIIPA regulations.)
